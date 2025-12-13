@@ -1,0 +1,11 @@
+aws_region           = "eu-west-1"
+environment          = "staging"
+ec2_key_name         = "my-key"
+instance_type        = "t3.small"
+db_username          = "stageuser"
+db_password          = "stagepassword"
+db_instance_class    = "db.t3.small"
+vpc_cidr             = "10.1.0.0/16"
+public_subnet_cidrs  = ["10.1.1.0/24", "10.1.2.0/24"]
+private_subnet_cidrs = ["10.1.11.0/24", "10.1.12.0/24"]
+az_count             = 2

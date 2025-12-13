@@ -1,0 +1,10 @@
+# Terraform state files
+terraform/envs/*/terraform.tfstate
+terraform/envs/*/terraform.tfstate.*
+terraform/envs/*/.terraform.tfstate.*
+terraform/envs/*/.terraform/
+terraform/envs/*/.terraform.lock.hcl
+
+# ssh private keys
+ressources/ssh-keys/*.pem
+ressources/ssh-keys/my-key
