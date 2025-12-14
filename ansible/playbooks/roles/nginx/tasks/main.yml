@@ -1,0 +1,46 @@
+---
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: Install Certbot and Nginx plugin
+  apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+    update_cache: yes
+
+- name: Copy Nginx configuration
+  copy:
+    src: my-nginx.conf
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Test Nginx configuration
+  command: nginx -t
+  register: nginx_test
+  ignore_errors: true
+
+- name: Fail if Nginx config is invalid
+  fail:
+    msg: "Nginx configuration test failed"
+  when: nginx_test.rc != 0
+
+- name: Ensure Nginx is running
+  systemd:
+    name: nginx
+    enabled: yes
+    state: restarted
+
+- name: Obtain SSL certificate with Certbot
+  shell: |
+    certbot --nginx --non-interactive --agree-tos --redirect -m firas.mosbehi@insat.ucar.tn -d ${ec2_public_dns}
+  args:
+    creates: /etc/letsencrypt/live/${ec2_public_dns}/fullchain.pem
+  notify:
+    - Reload Nginx

@@ -1,17 +1,17 @@
 version: "3.9"
 
 services:
-  # db:
-  #   image: postgres:16-alpine
-  #   container_name: taskboard-db
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: taskboard
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - pgdata:/var/lib/postgresql/data
+  db:
+    image: postgres:16-alpine
+    container_name: taskboard-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: taskboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
   backend:
     image: ghcr.io/firasmosbehi/task-board/backend:a837177346a593969d681e5dee32af15c696b978
@@ -35,7 +35,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"   # App reachable on http://localhost
+      - "8000:80"   # App reachable on http://localhost
   otel-collector:
     image: otel/opentelemetry-collector:latest
     command: ["--config=/etc/otel-collector-config.yml"]
@@ -96,6 +96,7 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: adminn
+      GF_SERVER_ROOT_URL: /grafana
     volumes:
       # automatically configure datasources
       - ./config/grafana/datasources.yaml/:/etc/grafana/provisioning/datasources/sources.yaml
@@ -107,7 +108,7 @@ services:
 
 
 volumes:
-  # pgdata:
+  pgdata:
   tempo-data:
   loki-data:
   prometheus-data:

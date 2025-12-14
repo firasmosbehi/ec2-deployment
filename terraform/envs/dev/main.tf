@@ -37,3 +37,7 @@ output "ec2_public_ip" {
 output "rds_endpoint" {
   value = module.infra.rds_endpoint
 }
+
+output "ec2_public_dns" {
+  value = module.infra.ec2_public_dns
+}

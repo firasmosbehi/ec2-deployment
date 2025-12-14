@@ -1,0 +1,33 @@
+---
+- hosts: ec2
+  become: true
+
+  roles:
+    - docker  # Install Docker first, but don't start your app yet
+
+  tasks:
+    - name: Create app directory
+      file:
+        path: /home/ubuntu/app
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Copy application files
+      copy:
+        src: ../../application/
+        dest: /home/ubuntu/application/
+        owner: ubuntu
+        group: ubuntu
+        mode: 0755
+
+    - name: Run docker compose to start app
+      become_user: ubuntu
+      shell: |
+        cd /home/ubuntu/application &&
+        docker compose up --force-recreate -d
+
+- hosts: ec2
+  become: true
+  roles:
+    - nginx  # Now configure Nginx + Certbot after the app is running

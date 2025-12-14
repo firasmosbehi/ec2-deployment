@@ -30,8 +30,13 @@ resource "aws_instance" "app" {
   key_name               = var.ec2_key_name
   subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.ec2.id]
+  associate_public_ip_address = true
+
   tags = {
     Name        = "${var.environment}-app"
     Environment = var.environment
   }
+
+  depends_on = [aws_route_table_association.public_assoc]
 }
+
