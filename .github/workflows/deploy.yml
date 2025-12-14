@@ -64,6 +64,8 @@ jobs:
 
             TF_OUTPUT_JSON=$(cat terraform/envs/dev/tf_outputs.json)
 
+            Terraform Outputs =$($TF_OUTPUT_JSON" | jq ...)
+
             echo "Terraform Outputs: $TF_OUTPUT_JSON"
 
             # Loop over all keys
