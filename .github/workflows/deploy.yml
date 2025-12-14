@@ -59,27 +59,28 @@ jobs:
 
       - name: Replace Terraform placeholders
         run: |
-          export LC_ALL=en_US.UTF-8
-          export LANG=en_US.UTF-8
+            export LC_ALL=en_US.UTF-8
+            export LANG=en_US.UTF-8
 
-          TF_OUTPUT_JSON=$(cat terraform/envs/dev/tf_outputs.json)
+            TF_OUTPUT_JSON=$(cat terraform/envs/dev/tf_outputs.json)
 
-          echo "$TF_OUTPUT_JSON" | jq -r 'keys[]' | while IFS= read -r key; do
-            value=$(echo "$TF_OUTPUT_JSON" | jq -r ".\"$key\".value")
+            echo "Terraform Outputs: $TF_OUTPUT_JSON"
+
+            # Loop over all keys
+            for key in $(echo "$TF_OUTPUT_JSON" | jq -r 'keys[]'); do
+            # Get the value safely as JSON string
+            value=$(echo "$TF_OUTPUT_JSON" | jq -r ".\"$key\".value | @json")
+            # Remove surrounding quotes if it's a string
+            value=$(echo "$value" | sed 's/^"\(.*\)"$/\1/')
+
             echo "Replacing placeholder \${$key} with $value"
 
             # Replace in ansible directory
-            find ansible -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.zip" ! -path "./terraform/*" | while read file; do
-              sed -i.bak "s|\${$key}|$value|g" "$file" || echo "Skipped $file"
-              rm -f "${file}.bak"
-            done
+            find ansible -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.zip" ! -path "./terraform/*" -exec sed -i.bak "s|\${$key}|$value|g" {} \; -exec rm -f {}.bak \;
 
             # Replace in application directory
-            find application -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.zip" ! -path "./terraform/*" | while read file; do
-              sed -i.bak "s|\${$key}|$value|g" "$file" || echo "Skipped $file"
-              rm -f "${file}.bak"
+            find application -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.zip" ! -path "./terraform/*" -exec sed -i.bak "s|\${$key}|$value|g" {} \; -exec rm -f {}.bak \;
             done
-          done
 
       - name: Install Ansible
         run: |
