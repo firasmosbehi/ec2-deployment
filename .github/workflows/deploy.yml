@@ -58,9 +58,9 @@ jobs:
 
       - name: Write SSH private key
         run: |
-          mkdir -p ressources/ssh-keys
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ressources/ssh-keys/my-key
-          chmod 600 ressources/ssh-keys/my-key
+          mkdir -p ./ressources/ssh-keys
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ./ressources/ssh-keys/my-key
+          chmod 600 ./ressources/ssh-keys/my-key
 
       - name: Replace Terraform placeholders
         run: |
