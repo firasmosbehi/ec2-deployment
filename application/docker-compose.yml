@@ -22,7 +22,7 @@ services:
       DB_USER: ${rds_username}   # RDS username from Terraform
       DB_PASSWORD: ${rds_password}   # RDS password from Terraform
       DB_NAME: ${rds_db_name}   # RDS database name from Terraform
-      FRONTEND_ORIGIN: ${ec2_public_dns}   # Nginx frontend
+      FRONTEND_ORIGIN: http://${ec2_public_dns}   # Nginx frontend
       PORT: 8080
     # depends_on:
     #   - db
