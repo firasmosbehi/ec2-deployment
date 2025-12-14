@@ -29,9 +29,9 @@ jobs:
           terraform init
           terraform apply -auto-approve
 
-          export TF_CLI_ARGS="-no-color"
-          export TERRAFORM_WRAPPER=""
-          terraform output -json > tf_outputs.json
+          terraform output -json | tee tf_outputs.json >/dev/null
+      - name: Validate Terraform JSON
+        run: jq . terraform/envs/dev/tf_outputs.json    
 
       - name: Upload Terraform Outputs
         id: upload
