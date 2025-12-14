@@ -21,6 +21,12 @@
         group: ubuntu
         mode: 0755
 
+    - name: pull docker compose images
+      become_user: ubuntu
+      shell: |
+        cd /home/ubuntu/application &&
+        docker compose pull
+
     - name: Run docker compose to start app
       become_user: ubuntu
       shell: |

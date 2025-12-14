@@ -34,10 +34,29 @@ output "ec2_public_ip" {
   value = module.infra.ec2_public_ip
 }
 
+
+output "ec2_public_dns" {
+  value = module.infra.ec2_public_dns
+}
+
 output "rds_endpoint" {
   value = module.infra.rds_endpoint
 }
 
-output "ec2_public_dns" {
-  value = module.infra.ec2_public_dns
+output "rds_port" {
+  value = module.infra.rds_port
+}
+
+output "rds_username" {
+  value = module.infra.rds_username
+}
+
+output "rds_password" {
+  sensitive = true
+  value = module.infra.rds_password
+}
+
+output "rds_db_name" {
+  sensitive = true
+  value = module.infra.rds_db_name
 }
