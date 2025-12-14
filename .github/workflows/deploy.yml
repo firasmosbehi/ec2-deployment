@@ -1,0 +1,88 @@
+name: Deploy EC2 + RDS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    outputs:
+      tf_artifact: ${{ steps.upload.outputs.artifact-name }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.0
+
+      - name: Terraform Init & Apply
+        working-directory: terraform/envs/dev
+        run: |
+          terraform init
+          terraform apply -auto-approve
+          terraform output -json > tf_outputs.json
+
+      - name: Upload Terraform Outputs
+        id: upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: tf-outputs
+          path: terraform/envs/dev/tf_outputs.json
+
+  deploy:
+    name: Ansible Deployment
+    runs-on: ubuntu-latest
+    needs: terraform
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Terraform Outputs
+        uses: actions/download-artifact@v3
+        with:
+          name: tf-outputs
+          path: terraform/envs/dev
+
+      - name: Write SSH private key
+        run: |
+          mkdir -p ressources/ssh-keys
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ressources/ssh-keys/my-key
+          chmod 600 ressources/ssh-keys/my-key
+
+      - name: Replace Terraform placeholders
+        run: |
+          export LC_ALL=en_US.UTF-8
+          export LANG=en_US.UTF-8
+
+          TF_OUTPUT_JSON=$(cat terraform/envs/dev/tf_outputs.json)
+
+          for key in $(echo "$TF_OUTPUT_JSON" | jq -r 'keys[]'); do
+            value=$(echo "$TF_OUTPUT_JSON" | jq -r ".\"$key\".value")
+            echo "Replacing placeholder \${$key} with $value"
+
+            # Replace in ansible directory
+            find ansible -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.zip" ! -path "./terraform/*" | while read file; do
+              sed -i.bak "s|\${$key}|$value|g" "$file" || echo "Skipped $file"
+              rm -f "${file}.bak"
+            done
+
+            # Replace in application directory
+            find application -type f ! -name "*.png" ! -name "*.jpg" ! -name "*.zip" ! -path "./terraform/*" | while read file; do
+              sed -i.bak "s|\${$key}|$value|g" "$file" || echo "Skipped $file"
+              rm -f "${file}.bak"
+            done
+          done
+
+      - name: Install Ansible
+        run: |
+          sudo apt update
+          sudo apt install -y ansible
+
+      - name: Run Ansible Playbook
+        run: ansible-playbook -i ansible/inventory/dev.ini ansible/playbooks/deploy.yml
