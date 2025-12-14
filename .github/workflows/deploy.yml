@@ -64,7 +64,7 @@ jobs:
 
           TF_OUTPUT_JSON=$(cat terraform/envs/dev/tf_outputs.json)
 
-          for key in $(echo "$TF_OUTPUT_JSON" | jq -r 'keys[]'); do
+          echo "$TF_OUTPUT_JSON" | jq -r 'keys[]' | while IFS= read -r key; do
             value=$(echo "$TF_OUTPUT_JSON" | jq -r ".\"$key\".value")
             echo "Replacing placeholder \${$key} with $value"
 
