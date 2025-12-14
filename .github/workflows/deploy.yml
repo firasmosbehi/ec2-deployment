@@ -28,6 +28,9 @@ jobs:
           export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
           terraform init
           terraform apply -auto-approve
+
+          export TF_CLI_ARGS="-no-color"
+          export TERRAFORM_WRAPPER=""
           terraform output -json > tf_outputs.json
 
       - name: Upload Terraform Outputs
@@ -65,23 +68,17 @@ jobs:
             export LANG=en_US.UTF-8
 
             TF_FILE="terraform/envs/dev/tf_outputs.json"
-            CLEAN_TF_FILE="/tmp/tf_outputs_clean.json"
 
-            echo "Cleaning Terraform output (removing first line)..."
+            echo "Using Terraform outputs from: $TF_FILE"
+            jq '.' "$TF_FILE" >/dev/null   # sanity check (will fail if JSON is broken)
 
-            # REMOVE FIRST LINE (this is the key fix)
-            sed '1d' "$TF_FILE" > "$CLEAN_TF_FILE"
-
-            # Sanity check
-            jq '.' "$CLEAN_TF_FILE" >/dev/null
-
-            echo "Terraform outputs cleaned and valid JSON"
-
-            jq -r 'keys[]' "$CLEAN_TF_FILE" | while read -r key; do
-            value=$(jq -r ".\"$key\".value" "$CLEAN_TF_FILE")
+            # Loop over all Terraform outputs
+            jq -r 'keys[]' "$TF_FILE" | while read -r key; do
+            value=$(jq -r ".\"$key\".value" "$TF_FILE")
 
             echo "Replacing placeholder \${$key} with $value"
 
+            # Replace in ansible directory
             find ansible \
                 -type f \
                 ! -path "./terraform/*" \
@@ -89,6 +86,7 @@ jobs:
                 -exec sed -i.bak "s|\${$key}|$value|g" {} \; \
                 -exec rm -f {}.bak \;
 
+            # Replace in application directory
             find application \
                 -type f \
                 ! -path "./terraform/*" \
